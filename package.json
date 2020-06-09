@@ -2,16 +2,27 @@
   "name": "anydo-client",
   "version": "1.0.0",
   "description": "Unofficial AnyDo Api client.",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "lib/index.js",
+  "types": "lib/index.d.ts",
+  "files": [
+    "lib"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/klinyecviktor/anydo-client"
+  },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "build": "tsc ./src/index.ts",
-    "prepublish": "tsc ./src/index.ts"
+    "build": "tsc --build tsconfig.json",
+    "build:check": "tsc --noEmit",
+    "prepublish": "tsc"
   },
-  "keywords": [],
-  "author": "",
-  "license": "ISC",
+  "publishConfig": {
+    "access": "public"
+  },
+  "keywords": ["any-do", "AnyDo", "any.do"],
+  "author": "Victor Klynets",
+  "license": "MIT",
   "devDependencies": {
     "typescript": "^3.8.3"
   },

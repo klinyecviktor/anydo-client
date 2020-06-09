@@ -1,92 +1,114 @@
-type UpdateTime = null | number
-type ActiveGroupMethod = 'date' | null // ??
-type Status = 'UNCHECKED' | 'CHECKED'
-type RepeatMethod = 'TASK_REPEAT_OFF' | 'TASK_REPEAT_DAY'
-type Note = string | null
-type Labels = string[] | null
+import {AnyDoResult, CategoryType, TaskType} from './anydo.types'
+import {Tasks} from "./tasks";
 
-export interface CategoryType {
-  lastUpdateDate: number,
-  isSyncedWithAlexaUpdateTime: UpdateTime,
-  default: boolean,
-  activeGroupMethod: ActiveGroupMethod,
-  nameUpdateTime: UpdateTime,
-  isSyncedWithAlexa: boolean,
-  id: string,
-  isGroceryList: boolean,
-  positionUpdateTime: UpdateTime,
-  isDeleted: boolean,
-  activeGroupMethodUpdateTime: UpdateTime,
-  isSyncedWithGoogleAssistant: boolean,
-  isSyncedWithGoogleAssistantUpdateTime: UpdateTime,
-  isDefault: true,
-  isGroceryListUpdateTime: UpdateTime,
-  name: string,
-  position: string,
-  isDeletedUpdateTime: UpdateTime,
-  isDefaultUpdateTime: UpdateTime,
-}
+const request = require('request-promise-native')
 
-export interface TaskType {
-  alertUpdateTime: UpdateTime,
-  assignedTo: string,
-  assignedToUpdateTime: UpdateTime,
-  categoryId: CategoryType["id"],
-  categoryIdUpdateTime: UpdateTime,
-  creationDate: number,
-  dueDate: UpdateTime,
-  dueDateUpdateTime: UpdateTime,
-  globalTaskId: string,
-  id: string,
-  labels: Labels,
-  labelsUpdateTime: UpdateTime,
-  lastUpdateDate: UpdateTime,
-  latitude: null, // ?
-  longitude: null, // ?
-  note: Note,
-  noteUpdateTime: UpdateTime
-  parentGlobalTaskId: null | string,
-  participants: [],  // ?
-  position: string,
-  positionUpdateTime: UpdateTime,
-  priority: 'Normal' | 'High',
-  priorityUpdateTime: UpdateTime,
-  repeatingMethod: RepeatMethod,
-  shared: false, // ?
-  status: Status,
-  statusUpdateTime: UpdateTime,
-  subTasks: [], // always empty array
-  title: string, // name
-  titleUpdateTime: UpdateTime,
-  alert:
-    { repeatDays: '0000000',
-      repeatEndType: 'REPEAT_END_NEVER',
-      repeatEndsOn: null,
-      repeatInterval: 1,
-      repeatEndsAfterOccurrences: -1,
-      repeatMonthType: 'ON_DATE',
-      type: 'NONE',
-      customTime: 0,
-      repeatStartsOn: null,
-      repeatNextOccurrence: null,
-      offset: 0 },
-}
+const API_URL = 'https://sm-prod2.any.do'
 
-interface Model<T> {
-  items: T[],
-  statusCode: number
-}
+export class AnyDoApi {
+  private authToken?: string
+  private readonly loginState?: Promise<void>
+  private _tasks?: TaskType[]
+  private _categories?: CategoryType[]
 
-interface ModelTypes {
-  attachment: Model<any>,
-  category: Model<CategoryType>,
-  userNotification: Model<any>,
-  sharedMember: Model<any>,
-  task: Model<TaskType>,
-  taskNotification: Model<any>,
-}
+  constructor(email: string, password: string) {
+    if (!email || !password) {
+      throw Error('Email and Password are required.')
+    }
 
-export interface AnyDoResult {
-  lastUpdate: number,
-  models: ModelTypes,
+    this.loginState = this.login(email, password)
+  }
+
+  private async login(email: string, password: string) {
+    const loginResponse = await request
+      .post({
+        uri: `${API_URL}/login`,
+        body: {email, password},
+        json: true
+      })
+
+    this.authToken = loginResponse.auth_token
+  }
+
+  private async sync() {
+    if (!this.authToken) {
+      await this.loginState
+    }
+
+    const syncResult: AnyDoResult = await request({
+      uri: `${API_URL}/api/v2/me/sync`,
+      method: 'POST',
+      headers: {
+        'X-Anydo-Auth': this.authToken,
+        'Content-Type': 'application/json'
+      },
+      json: true,
+      body: {
+        models: {
+          category: {
+            items: []
+          },
+          task: {
+            items: [],
+            config: {includeDone: false, includeDeleted: false}
+          }
+        }
+      },
+    })
+
+    this._tasks = syncResult.models.task.items
+    this._categories = syncResult.models.category.items
+      .filter((category) => !category.isDeleted)
+  }
+
+  public async getTaskList(): Promise<Tasks> {
+    await this.sync()
+
+    if (!this._tasks) {
+      throw Error('Synchronization error occurred.')
+    }
+
+    return new Tasks(this._tasks)
+  }
+
+  public async getCategoryList(): Promise<readonly CategoryType[]> {
+    await this.sync()
+
+    if (!this._categories) {
+      throw Error('Synchronization error occurred.')
+    }
+
+    return [...this._categories]
+  }
+
+  public async findTasksByCategoryName(categoryName: string): Promise<Tasks> {
+    const categories = await this.getCategoryList()
+    const categoryMatch = categories.find((category) => category.name === categoryName)
+
+    if (!categoryMatch) {
+      throw Error('Could not find category with the given name.')
+    }
+
+    const tasks = await this.getTaskList()
+
+    return new Tasks(tasks.filter((task) => task.categoryId === categoryMatch.id))
+  }
+
+  public async findTasksByDefaultCategory(): Promise<Tasks> {
+    const categories = await this.getCategoryList()
+    const defaultCategory = categories.find((category) => category.default)
+
+    if (!defaultCategory) {
+      throw Error('Could not find default category.')
+    }
+
+    const tasks = await this.getTaskList()
+
+    return new Tasks(tasks.filter((task) => task.categoryId === defaultCategory.id))
+  }
+
+  // TODO
+  public async addTask() {
+    await this.sync()
+  }
 }
