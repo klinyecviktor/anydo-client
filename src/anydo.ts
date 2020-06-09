@@ -1,9 +1,16 @@
 import {AnyDoResult, CategoryType, TaskType} from './anydo.types'
 import {Tasks} from "./tasks";
+import {idGenerator} from "./utils";
 
 const request = require('request-promise-native')
 
 const API_URL = 'https://sm-prod2.any.do'
+
+interface TaskCreate {
+  title: string,
+  dueDate: number,
+  id: string,
+}
 
 export class AnyDoApi {
   private authToken?: string
@@ -30,10 +37,12 @@ export class AnyDoApi {
     this.authToken = loginResponse.auth_token
   }
 
-  private async sync() {
+  private async sync(taskSync?: TaskCreate) {
     if (!this.authToken) {
       await this.loginState
     }
+
+    const taskItems = taskSync ? [taskSync] : []
 
     const syncResult: AnyDoResult = await request({
       uri: `${API_URL}/api/v2/me/sync`,
@@ -49,7 +58,7 @@ export class AnyDoApi {
             items: []
           },
           task: {
-            items: [],
+            items: taskItems,
             config: {includeDone: false, includeDeleted: false}
           }
         }
@@ -107,8 +116,19 @@ export class AnyDoApi {
     return new Tasks(tasks.filter((task) => task.categoryId === defaultCategory.id))
   }
 
-  // TODO
-  public async addTask() {
-    await this.sync()
+  public async addTask(addTaskOption: string | TaskCreate) {
+    let syncOption: TaskCreate
+
+    if (typeof addTaskOption === 'string') {
+      syncOption = {
+        title: addTaskOption,
+        dueDate: Date.now(),
+        id: idGenerator(),
+      }
+    } else {
+      syncOption = addTaskOption
+    }
+
+    await this.sync(syncOption)
   }
 }

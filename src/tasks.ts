@@ -13,6 +13,10 @@ export class Tasks {
     this.find = this._tasks.find.bind(this._tasks)
   }
 
+  get() {
+    return this._tasks
+  }
+
   getTasksName() {
     return this.map((task) => task.title)
   }
@@ -22,5 +26,9 @@ export class Tasks {
     const todayTasks = this.filter((task) => task.dueDate && (task.dueDate < today.getTime()))
 
     return (new Tasks(todayTasks)).getTasksName()
+  }
+
+  isEmpty() {
+    return !this._tasks?.length
   }
 }
