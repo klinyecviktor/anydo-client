@@ -29,4 +29,4 @@ const tasks = (await api.findTasksByDefaultCategory()).getTasksForToday() // Get
 
 ### License
 
-React is [MIT licensed](./LICENSE).
+Anydo-client is [MIT licensed](./LICENSE).
