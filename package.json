@@ -1,6 +1,6 @@
 {
   "name": "anydo-client",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "description": "Anydo-client is unofficial Node.js wrapper for Any.do API.",
   "main": "lib/index.js",
   "types": "lib/index.d.ts",
