@@ -22,8 +22,12 @@ export class Tasks {
   }
 
   getTasksForToday() {
-    const today = new Date()
-    const todayTasks = this.filter((task) => task.dueDate && (task.dueDate < today.getTime()))
+    const tomorrow = new Date()
+
+    tomorrow.setHours(0, 0, 0, 0)
+    tomorrow.setDate(tomorrow.getDate() + 1)
+
+    const todayTasks = this.filter((task) => task.dueDate && (task.dueDate < tomorrow.getTime()))
 
     return (new Tasks(todayTasks)).getTasksName()
   }
