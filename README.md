@@ -23,7 +23,7 @@ const tasks = (await api.findTasksByDefaultCategory()).getTasksForToday() // Get
 - [x] Get categories
 - [x] Tasks for today
 - [x] Tasks from default category
-- [ ] Add task and category
+- [x] Add task and category
 - [ ] Update task and category
 - [ ] Remove task and category
 
