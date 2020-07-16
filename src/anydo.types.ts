@@ -1,6 +1,6 @@
 type UpdateTime = null | number
 type ActiveGroupMethod = 'date' | null // ??
-type Status = 'UNCHECKED' | 'CHECKED'
+type Status = 'UNCHECKED' | 'CHECKED' | 'DONE'
 type RepeatMethod = 'TASK_REPEAT_OFF' | 'TASK_REPEAT_DAY'
 type Note = string | null
 type Labels = string[] | null
@@ -31,7 +31,7 @@ export interface TaskType {
   alertUpdateTime: UpdateTime,
   assignedTo: string,
   assignedToUpdateTime: UpdateTime,
-  categoryId: CategoryType["id"],
+  categoryId: CategoryType['id'],
   categoryIdUpdateTime: UpdateTime,
   creationDate: number,
   dueDate: UpdateTime,
@@ -59,7 +59,8 @@ export interface TaskType {
   title: string, // name
   titleUpdateTime: UpdateTime,
   alert:
-    { repeatDays: '0000000',
+    {
+      repeatDays: '0000000',
       repeatEndType: 'REPEAT_END_NEVER',
       repeatEndsOn: null,
       repeatInterval: 1,
@@ -69,7 +70,8 @@ export interface TaskType {
       customTime: 0,
       repeatStartsOn: null,
       repeatNextOccurrence: null,
-      offset: 0 },
+      offset: 0
+    },
 }
 
 interface Model<T> {

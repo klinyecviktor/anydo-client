@@ -1,6 +1,6 @@
-import {AnyDoResult, CategoryType, TaskType} from './anydo.types'
-import {Tasks} from "./tasks";
-import {idGenerator} from "./utils";
+import { AnyDoResult, CategoryType, TaskType } from './anydo.types'
+import { Tasks } from './tasks'
+import { idGenerator } from './utils'
 
 const request = require('request-promise-native')
 
@@ -30,8 +30,8 @@ export class AnyDoApi {
     const loginResponse = await request
       .post({
         uri: `${API_URL}/login`,
-        body: {email, password},
-        json: true
+        body: { email, password },
+        json: true,
       })
 
     this.authToken = loginResponse.auth_token
@@ -42,26 +42,27 @@ export class AnyDoApi {
       await this.loginState
     }
 
-    const taskItems = taskSync ? [taskSync] : []
+    const taskItems = taskSync ? [ taskSync ] : []
 
     const syncResult: AnyDoResult = await request({
       uri: `${API_URL}/api/v2/me/sync`,
       method: 'POST',
       headers: {
         'X-Anydo-Auth': this.authToken,
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
       },
       json: true,
       body: {
         models: {
           category: {
-            items: []
+            items: [],
+            config: { includeDone: false, includeDeleted: false },
           },
           task: {
             items: taskItems,
-            config: {includeDone: false, includeDeleted: false}
-          }
-        }
+            config: { includeDone: false, includeDeleted: false },
+          },
+        },
       },
     })
 
@@ -87,7 +88,7 @@ export class AnyDoApi {
       throw Error('Synchronization error occurred.')
     }
 
-    return [...this._categories]
+    return [ ...this._categories ]
   }
 
   public async findTasksByCategoryName(categoryName: string): Promise<Tasks> {
