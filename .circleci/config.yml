@@ -1,0 +1,37 @@
+version: 2
+jobs:
+  build_and_publish:
+    docker:
+      - image: circleci/node
+    steps:
+      - checkout
+      - restore_cache:
+          keys:
+            - v1-dependencies-{{ checksum "package.json" }}
+            - v1-dependencies-
+
+      - run:
+          name: Install npm
+          command: npm ci
+
+      - save_cache:
+          paths:
+            - node_modules
+          key: v1-dependencies-{{ checksum "package.json" }}
+
+      - run:
+          name: Auth With NPM
+          command: echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" > .npmrc
+
+      - run:
+          name: Publish to NPM
+          command: npm publish
+
+workflows:
+  version: 2
+  test:
+    jobs:
+      - build_and_publish:
+          filters:
+            tags: # required since `build` has tag filters AND requires `test_and_lint`.
+              only: /^\d+\.\d+\.\d+$/
